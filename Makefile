@@ -1,6 +1,9 @@
+ca:
+	openssl genrsa -des3 -out ca.key 2048 &&\
+	openssl req -x509 -new -nodes -key ca.key -sha256 -days 1825 -out ca.pem	
 certs:
-	openssl genpkey -algorithm RSA -out private.key && openssl req -new -key private.key -out server.csr -subj "/C=JM/ST=Kingston/L=Kingston/O=DevLabs/OU=Dev/CN=DevLabs" &&	openssl x509 -req -days 365 -in server.csr -signkey private.key -out certificate.crt &&	openssl pkcs12 -export -out keystore.p12 -inkey private.key -in certificate.crt && keytool -importkeystore -srckeystore keystore.p12 -destkeystore keystore.jks -deststoretype pkcs12
-pkcs12:
-	keytool -genkeypair -v -keystore keystore.p12 -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 365 -alias keystore -storepass store123 -keypass key123 -dname "CN=DevLabs, OU=Dev, O=DevLabs, L=Kingston, ST=Kingston, C=JM"
-jks:
-	keytool -genkeypair -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 365 -alias keystore -storepass store123 -keypass key123 -dname "CN=DevLabs, OU=Dev, O=DevLabs, L=Kingston, ST=Kingston, C=JM"
+	openssl genrsa -out private.key && \
+	openssl req -new -key private.key -out server.csr -subj "/CN=DevLabs" && \
+	openssl x509 -req -days 365 -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -out certificate.crt -sha256 -extfile dn.ext -subj "/CN=DevLabs" && \
+	openssl pkcs12 -export -out keystore.p12 -inkey private.key -in certificate.crt && \
+	keytool -importkeystore -srckeystore keystore.p12 -srcstoretype PKCS12 -destkeystore keystore.jks -deststoretype JKS
